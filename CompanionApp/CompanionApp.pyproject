@@ -1,0 +1,13 @@
+{
+    "files": [
+        "mainwindow.py",
+        "form.ui",
+        "icons/arrow-left.svg",
+        "icons/buttons.svg",
+        "icons/menu.svg",
+        "icons/placeholder.svg",
+        "icons/settings.svg",
+        "icons/sidebar.svg",
+        "custom_widgets/button_slot.py"
+    ]
+}

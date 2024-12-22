@@ -1,0 +1,20 @@
+{
+    "buttons": [
+        {
+            "id": 1,
+            "label": "testing"
+        },
+        {
+            "id": 2,
+            "label": "Button 2"
+        },
+        {
+            "id": 3,
+            "label": "Button 3"
+        },
+        {
+            "id": 4,
+            "label": "Welcome"
+        }
+    ]
+}
