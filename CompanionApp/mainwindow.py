@@ -3,12 +3,13 @@ import sys
 import os
 import json
 from PySide6.QtGui import QIcon, QAction
-from PySide6.QtCore import QPropertyAnimation, Qt
+#from PySide6.QtCore import Qt
 from custom_widgets.button_slot import ButtonSlot
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QSystemTrayIcon,
     QMenu, QMessageBox, QWidget, QVBoxLayout,
-    QLabel, QLineEdit, QPushButton, QComboBox
+    QLabel, QLineEdit, QPushButton, QStackedWidget,
+    QSpacerItem, QSizePolicy, QFormLayout
     )
 
 # Important:
@@ -27,10 +28,10 @@ class MainWindow(QMainWindow):
 
         self.setup_tray_icon()
         self.connect_button_count_selector()
+        self.setup_side_panel()
 
         self.button_slots = []
         self.load_configuration()
-        self.setup_side_panel()
 
     def setup_tray_icon(self):
         """
@@ -72,6 +73,43 @@ class MainWindow(QMainWindow):
         # Add new button slots and save
         self.add_button_slots(layout)
 
+    def add_button_slots(self, layout):
+        """
+        Adds ButtonSlot widgets to button container and creates corresponding configuration panels.
+        """
+        num_buttons = int(self.button_count_selector.currentText())
+        self.button_slots = []  # Reset the button slots list
+        for i in range(num_buttons):
+            # Create ButtonSlot
+            button = ButtonSlot(self)
+            button.label = f"Button {i + 1}"  # Default label
+            layout.addWidget(button)
+            button.clicked.connect(lambda b=button: self.show_side_panel(b))  # Connect signal
+            button.clicked.connect(lambda b=button: self.on_button_clicked(b))
+            self.button_slots.append(button)
+
+            # Create a configuration panel for this button
+            config_panel = QWidget()
+            config_layout = QVBoxLayout(config_panel)
+            config_label = QLabel(f"Configure {button.label}")
+            config_layout.addWidget(config_label)
+
+            label_edit = QLineEdit()
+            label_edit.setPlaceholderText("Enter button name")
+            label_edit.setText(button.label)
+            save_button = QPushButton("Save")
+            save_button.clicked.connect(lambda checked, b=button, le=label_edit: self.save_button_configuration(b, le))
+
+
+            config_layout.addWidget(label_edit)
+            config_layout.addWidget(save_button)
+
+            # Add the config panel to the QStackedWidget
+            self.side_panel.addWidget(config_panel)
+            self.button_config_panels[button] = config_panel
+            spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            config_layout.addItem(spacer)
+
     def load_configuration(self):
         """
         Loads button configuration from a JSON file, if it exists.
@@ -89,34 +127,44 @@ class MainWindow(QMainWindow):
             for idx, button_config in enumerate(self.config_data["buttons"]):
                 if idx < len(self.button_slots):
                     self.button_slots[idx].label = button_config["label"]
+
+                    config_panel = self.button_config_panels.get(self.button_slots[idx])
+                    if config_panel:
+                        label_edit = config_panel.findChild(QLineEdit)
+                        if label_edit:
+                            label_edit.setText(button_config["label"])
         else:
             # Default: Load based on combo box selection
             self.update_button_slots()
 
     def setup_side_panel(self):
         """
-        Sets up side panel UI for customizing buttons.
+        Sets up the side panel UI using a QStackedWidget.
         """
-
-        self.side_panel = QWidget(self)
+        # Create a QStackedWidget for the side panel
+        self.side_panel = QStackedWidget(self)
         self.side_panel.setFixedWidth(200)
         self.side_panel.setStyleSheet("background-color: #1A1A1A;")
-        self.side_panel.setGeometry(self.width(), 0, 200, self.height())
+        self.side_panel.setVisible(False)  # Start hidden
 
-        layout = QVBoxLayout(self.side_panel)
-        layout.setAlignment(Qt.AlignTop)
+        # Add the QStackedWidget to the layout
+        layout = self.ui.centralwidget.layout()
+        layout.addWidget(self.side_panel)
 
-        self.label_edit = QLineEdit()
-        self.label_edit.setPlaceholderText("Enter button Name")
-        save_button = QPushButton("Save")
-        save_button.clicked.connect(self.update_button_configuration)
+        # Keep track of button configurations
+        self.button_config_panels = {}  # Map button slots to their config panels
 
-        layout.addWidget(QLabel("Button Configuration"))
-        layout.addWidget(self.label_edit)
-        layout.addWidget(save_button)
+    def show_side_panel(self, button_slot):
+        """
+        Displays the side panel for the selected button slot.
+        """
+        print(f"Opening side panel for {button_slot.label}")
 
-        self.selected_button = None
-        self.animation = QPropertyAnimation(self.side_panel, b"geometry")
+        # Get the corresponding config panel
+        config_panel = self.button_config_panels.get(button_slot)
+        if config_panel:
+            self.side_panel.setCurrentWidget(config_panel)  # Switch to the correct panel
+            self.side_panel.setVisible(True)
 
     def update_button_configuration(self):
         """
@@ -129,19 +177,17 @@ class MainWindow(QMainWindow):
 
             self.save_configuration()
 
-    def add_button_slots(self, layout):
+    def save_button_configuration(self, button_slot, label_edit):
         """
-        Adds ButtonSlot widgets to button container and loads config file.
+        Saves the configuration for the selected button slot.
         """
+        new_label = label_edit.text()
+        button_slot.label = new_label  # Update the button's label
 
-        num_buttons = int(self.button_count_selector.currentText())
-        self.button_slots = []  # Reset the button slots list
-        for i in range(num_buttons):
-            button = ButtonSlot(self)
-            button.label = f"Button {i + 1}"  # Default label
-            layout.addWidget(button)
-            button.clicked.connect(lambda b=button: self.show_side_panel(b))  # Connect signal
-            self.button_slots.append(button)
+        # Save the configuration to the JSON file
+        self.save_configuration()
+
+        print(f"Configuration saved for {button_slot.label}: {new_label}")
 
     def save_configuration(self):
         """
@@ -161,21 +207,20 @@ class MainWindow(QMainWindow):
 
         print("saved")
 
-    def show_side_panel(self, button_slot):
+    def on_button_clicked(self, button):
         """
-        Displays the side panel for the selected button slot.
+        Handles button click event to highlight the clicked button.
         """
+        # Deselect all buttons
+        for btn in self.button_slots:
+            btn.set_selected(False)
 
-        print('panel')
-        self.side_panel.setGeometry(self.width(), 0, 200, self.height())
-        self.selected_button = button_slot
-        self.label_edit.setText(button_slot.label)
-        self.animation.setDuration(300)
-        self.animation.setStartValue(self.side_panel.geometry())
-        self.animation.setEndValue(
-            self.side_panel.geometry().translated(-self.side_panel.width(), 0)
-            )
-        self.animation.start()
+        # Select the clicked button
+        button.set_selected(True)
+        self.selected_button = button
+
+        # Show side panel for the clicked button
+        self.show_side_panel(button)
 
     def closeEvent(self, event):
         """
