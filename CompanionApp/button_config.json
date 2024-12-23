@@ -2,19 +2,11 @@
     "buttons": [
         {
             "id": 1,
-            "label": "testing"
+            "label": "world"
         },
         {
             "id": 2,
-            "label": "dos"
-        },
-        {
-            "id": 3,
-            "label": "Button 3"
-        },
-        {
-            "id": 4,
-            "label": "Welcome"
+            "label": "Button 2"
         }
     ]
 }

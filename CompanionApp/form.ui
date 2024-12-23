@@ -192,14 +192,14 @@ border: none;
             <widget class="QWidget" name="button_slot_container" native="true">
              <property name="minimumSize">
               <size>
-               <width>500</width>
-               <height>300</height>
+               <width>600</width>
+               <height>400</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>500</width>
-               <height>300</height>
+               <width>550</width>
+               <height>400</height>
               </size>
              </property>
              <layout class="QGridLayout" name="gridLayout"/>
