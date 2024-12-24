@@ -2,11 +2,20 @@
     "buttons": [
         {
             "id": 1,
-            "label": "world"
+            "label": "hello darkness my old",
+            "hotkey": [
+                "Key.ctrl_l",
+                "\u0013",
+                "Key.shift"
+            ]
         },
         {
             "id": 2,
-            "label": "Button 2"
+            "label": "world taco",
+            "hotkey": [
+                "f",
+                "Key.alt_l"
+            ]
         }
     ]
 }

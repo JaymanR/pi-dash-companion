@@ -3,8 +3,8 @@ import sys
 import os
 import json
 from PySide6.QtGui import QIcon, QAction
-#from PySide6.QtCore import Qt
-from custom_widgets.button_slot import ButtonSlot
+from custom.classes.widgets.button_slot import ButtonSlot
+from custom.classes.util.hotkey_util import HotkeyRecorder
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QSystemTrayIcon,
     QMenu, QMessageBox, QWidget, QVBoxLayout,
@@ -21,6 +21,7 @@ from ui_form import Ui_MainWindow
 CONFIG_FILE = "button_config.json"
 
 class MainWindow(QMainWindow):
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
@@ -133,17 +134,50 @@ class MainWindow(QMainWindow):
             label_edit = QLineEdit()
             label_edit.setPlaceholderText("Enter button name")
             label_edit.setText(button.label)
-            save_button = QPushButton("Save")
-            save_button.clicked.connect(lambda checked, b=button, le=label_edit: self.save_button_configuration(b, le))
+            label_edit.editingFinished.connect(lambda b=button, le=label_edit: self.save_configuration(b, le))
+            #save_button = QPushButton("Save")
+            #save_button.clicked.connect(lambda checked, b=button, le=label_edit: self.save_configuration(b, le))
 
+            hotkey_label = QLabel("Hotkey:")
+            hotkey_edit = QLineEdit()
+            hotkey_edit.setPlaceholderText("None")
+            hotkey_edit.setReadOnly(True)
+            record_button = QPushButton("Record Hotkey")
+            record_button.clicked.connect(lambda checked, b=button, he=hotkey_edit: self.record_hotkey(b, he))
 
             config_layout.addWidget(label_edit)
-            config_layout.addWidget(save_button)
+            #config_layout.addWidget(save_button)
+            config_layout.addWidget(hotkey_label)
+            config_layout.addWidget(hotkey_edit)
+            config_layout.addWidget(record_button)
 
             self.side_panel.addWidget(config_panel)
             self.button_config_panels[button] = config_panel
             spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
             config_layout.addItem(spacer)
+
+    def record_hotkey(self, button_slot, hotkey_edit):
+        """
+        Records a hotkey and stores it in the given slot.
+        """
+
+        self.hotkey_recorder = HotkeyRecorder()
+        self.hotkey_recorder.hotkey_recorded.connect(
+            lambda display_str, hotkey: self.update_hotkey_edit(button_slot, display_str, hotkey, hotkey_edit)
+            )
+        hotkey_edit.setText("Recording...")
+        self.hotkey_recorder.run()
+
+    def update_hotkey_edit(self, button_slot, display_str, hotkey, hotkey_edit):
+        """
+        Updates hotkey_edit with its recorded hotkey text.
+        """
+
+        hotkey_edit.setText(display_str)
+        print(f"recorded hotkey: {hotkey}")
+
+        button_slot.hotkey = hotkey
+        self.save_configuration()
 
     def load_configuration(self):
         """
@@ -162,12 +196,16 @@ class MainWindow(QMainWindow):
             for idx, button_config in enumerate(self.config_data["buttons"]):
                 if idx < len(self.button_slots):
                     self.button_slots[idx].label = button_config["label"]
+                    self.button_slots[idx].hotkey = button_config["hotkey"]
 
                     config_panel = self.button_config_panels.get(self.button_slots[idx])
                     if config_panel:
-                        label_edit = config_panel.findChild(QLineEdit)
-                        if label_edit:
-                            label_edit.setText(button_config["label"])
+                        line_edits = config_panel.findChildren(QLineEdit)
+                        if len(line_edits) >= 2:
+                            line_edits[0].setText(button_config["label"])
+
+                            hotkey_str = '+'.join(button_config.get("hotkey", []))
+                            line_edits[1].setText(hotkey_str)
         else:
             self.update_button_slots()
 
@@ -182,25 +220,21 @@ class MainWindow(QMainWindow):
 
             self.save_configuration()
 
-    def save_button_configuration(self, button_slot, label_edit):
-        """
-        Saves the configuration for the selected button slot.
-        """
-        new_label = label_edit.text()
-        button_slot.label = new_label
-
-        self.save_configuration()
-
-        print(f"Configuration saved for {button_slot.label}: {new_label}")
-
-    def save_configuration(self):
+    def save_configuration(self, button_slot=None, label_edit=None):
         """
         Saves the current configuration of the selected button slot.
         """
 
+        print("saving...")
+        if button_slot and label_edit:
+            #print("saving label...")
+            new_label = label_edit.text()
+            button_slot.label = new_label
+
+        #print("writing..")
         self.config_data = {
             "buttons": [
-                {"id": idx + 1, "label": button.label}
+                {"id": idx + 1, "label": button.label, "hotkey": getattr(button, "hotkey", '')}
                 for idx, button in enumerate(self.button_slots)
             ]
         }
@@ -209,7 +243,7 @@ class MainWindow(QMainWindow):
         with open(CONFIG_FILE, 'w') as config_file:
             json.dump(self.config_data, config_file, indent=4)
 
-        print("saved")
+        print("saved.\n")
 
     def show_side_panel(self, button_slot):
         """

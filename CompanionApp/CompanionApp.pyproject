@@ -8,6 +8,7 @@
         "icons/placeholder.svg",
         "icons/settings.svg",
         "icons/sidebar.svg",
-        "custom_widgets/button_slot.py"
+        "custom/classes/widgets/button_slot.py",
+        "custom/classes/util/hotkey_util.py"
     ]
 }

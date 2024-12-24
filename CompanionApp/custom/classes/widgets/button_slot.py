@@ -1,4 +1,8 @@
 # This Python file uses the following encoding: utf-8
+
+# if __name__ == "__main__":
+#     pass
+# This Python file uses the following encoding: utf-8
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QPainter, QPainterPath, QColor, QPen
 from PySide6.QtCore import Signal

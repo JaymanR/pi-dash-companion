@@ -118,7 +118,7 @@ class Ui_MainWindow(object):
         self.button_slot_container = QWidget(self.widget)
         self.button_slot_container.setObjectName(u"button_slot_container")
         self.button_slot_container.setMinimumSize(QSize(600, 400))
-        self.button_slot_container.setMaximumSize(QSize(550, 400))
+        self.button_slot_container.setMaximumSize(QSize(500, 400))
         self.gridLayout = QGridLayout(self.button_slot_container)
         self.gridLayout.setObjectName(u"gridLayout")
 
