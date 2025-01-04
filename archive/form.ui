@@ -39,7 +39,7 @@ border: none;
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>icons/buttons.svg</normaloff>icons/buttons.svg</iconset>
+           <normaloff>icons/buttons.png</normaloff>icons/buttons.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -69,7 +69,7 @@ border: none;
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>icons/settings.svg</normaloff>icons/settings.svg</iconset>
+           <normaloff>icons/settings.png</normaloff>icons/settings.png</iconset>
          </property>
          <property name="iconSize">
           <size>
