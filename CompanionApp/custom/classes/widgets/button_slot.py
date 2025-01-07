@@ -25,6 +25,7 @@ class ButtonSlot(QWidget):
 
         self.setMaximumSize(80, 80)
         self.setMouseTracking(True)
+        self.hotkey = None  # Add a hotkey attribute
 
     def is_selected(self):
         """
@@ -42,9 +43,26 @@ class ButtonSlot(QWidget):
         Args:
             state (bool): True to select the button, False to deselect it.
         """
-
         self._is_selected = state
-        self.update()
+        self.update()  # Ensure the button appearance is updated
+
+    def set_hotkey(self, hotkey):
+        """
+        Sets the hotkey for the button slot.
+
+        Args:
+            hotkey (str): The hotkey to set.
+        """
+        self.hotkey = hotkey
+
+    def get_hotkey(self):
+        """
+        Gets the hotkey for the button slot.
+
+        Returns:
+            str: The hotkey assigned to the button slot.
+        """
+        return self.hotkey
 
     def paintEvent(self, event):
         """
@@ -101,4 +119,4 @@ class ButtonSlot(QWidget):
 
         super().mousePressEvent(event)
         self.clicked.emit()
-        print('emitted')
+        print(f'emitted button {self.label} selected.')
